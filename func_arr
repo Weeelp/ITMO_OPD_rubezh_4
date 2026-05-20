@@ -1,0 +1,100 @@
+;"Задание №1. Разработать программу для работы с элементами массива M, в которой:
+;1. Массив имеет следующие характеристики:
+;- адрес начала массива в памяти БЭВМ - 0x6e6;
+;- число измерений исходного массива - 1;
+;- количество элементов исходного массива - 13;
+;- каждый элемент является знаковым числом с разрядностью 12 бит;
+;- нумерация элементов начинается с 1;
+;- элементы хранятся в массиве по границам слов, нет необходимости в плотной упаковке;
+;2. Для элементов массива необходимо вычислить 32-х битное значение функции:
+;- формула функции F(Mi) = 13 * Mi + 1425;
+;- 32-битный результат необходимо поместить в другой массив по адресу 0x400
+;- Результатом является массив 32-х разрядных чисел равным количеству элементов исходного массива.
+;Примечание: все числа представлены в десятичной системе счисления, если явно не указано иное.
+
+ORG 0x00
+
+start_ref: WORD 0x6E6
+res_ptr:   WORD 0x400
+count:     WORD 13
+
+const_num: WORD 1425
+
+sign_mask: WORD 0x0800
+sign_neg:  WORD 0xF000
+
+word_sign: WORD 0x0000
+temp_x:    WORD 0x0000
+
+ORG 0x10
+
+START:
+LOOP_P:
+        LD      count
+        BEQ     EXIT
+
+        DEC
+        ST      count
+
+        LD      (start_ref)+
+        ST      temp_x
+        AND     sign_mask
+        BEQ     POSITIVE
+
+NEGATIVE:
+        LD      temp_x
+        OR      sign_neg
+        ST      temp_x
+        JUMP    CALC
+
+POSITIVE:
+        LD      temp_x
+        ST      temp_x
+
+CALC:
+        LD      temp_x
+        ASL  
+        ADD     temp_x
+        ASL 
+        ASL 
+        ADD     temp_x  
+        ADD     const_num
+        ST      temp_x
+
+        BMI     NEG_RES
+
+POS_RES:
+        CLA
+        ST      word_sign
+        JUMP    WRITE
+
+NEG_RES:
+        CLA
+        DEC
+        ST      word_sign
+
+WRITE:
+        LD      word_sign
+        ST      (res_ptr)+
+        LD      temp_x
+        ST      (res_ptr)+
+        JUMP    LOOP_P
+
+EXIT:
+        HLT
+
+ORG 0x6E6
+
+WORD 0x0005
+WORD 0x0FD5
+WORD 0x0000
+WORD 0x0001
+WORD 0x0FFF
+WORD 0x000A
+WORD 0x0F38
+WORD 0x0064
+WORD 0x0FA0
+WORD 0x0002
+WORD 0x0FFE
+WORD 0x0100
+WORD 0x07FF
