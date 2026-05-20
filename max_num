@@ -1,0 +1,93 @@
+
+ORG 0x00
+start_ref: WORD 0x6DD
+ref: WORD 0x6DD
+temp: WORD 0x00
+max_low: WORD 0x00
+max_hight: WORD 0x00
+count: WORD 0x05
+res_ptr: WORD 0x400
+
+ORG 0x10
+START:  CLA
+	LD start_ref
+	ADD #0x04
+	ST ref
+	LD (ref)    
+	SXTB 
+	ST max_hight 
+	
+	LD ref      
+	INC
+	ST temp
+	LD (temp) 
+	ST max_low
+	
+PROG_LOOP:
+	LD count
+	DEC
+	ST count
+	BEQ exit
+	
+	LD ref
+	ADD #0x06    
+	ST ref
+	LD (ref)
+	SXTB  
+	BEQ pos_l
+	BPL pos_l
+	BMI neg_l
+	
+dec_count:
+	JUMP PROG_LOOP
+	
+neg_l:	SUB max_hight 
+	BEQ check_neg_low
+	BPL write_max  
+	JUMP dec_count
+
+pos_l: 	SUB max_hight 
+	BEQ check_pos_low
+	BPL write_max 
+	JUMP dec_count
+	
+check_neg_low: LD ref
+	INC
+	ST temp
+	LD (temp)
+	SUB max_low   
+	BPL write_max 
+	JUMP dec_count
+	
+check_pos_low: LD ref
+	INC
+	ST temp
+	LD (temp)
+	SUB max_low    
+	BPL write_max  
+	JUMP dec_count
+	
+write_max:
+	LD (ref)    
+	SXTB 
+	ST max_hight 
+	
+	LD ref      
+	INC
+	ST temp
+	LD (temp) 
+	ST max_low      
+	JUMP dec_count
+	
+next:   JUMP dec_count
+
+exit:   LD max_hight
+	ST (res_ptr)+
+	LD max_low
+	ST (res_ptr)
+	HLT
+
+ORG 0x400       
+res: WORD 0x00, 0x00
+
+
